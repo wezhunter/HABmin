@@ -62,7 +62,100 @@ Ext.define('openHAB.config.zwaveDeviceList', {
             }
             return allNodes;
         }
+        var includeRunning = false;
+        var excludeRunning = false;
+		var statusbar = Ext.create('Ext.ux.StatusBar', {
+			id: 'zwave-devices-statusbar',
+			height: 30,
+			statusAlign: 'right',
+            items: [
+						{
+							xtype: 'text',
+							text: 'Status: ',
+						},
+						{
+							id: 'controllerReady',
+							xtype: 'button',
+							text: 'Unknown',
+							cls: 'x-btn-default-toolbar-small-over',
+							overCls: 'x-btn-default-toolbar-small-over',
+							pressedCls: 'x-btn-default-toolbar-small-over',
+							cursor: 'default',
+						},
+						'-',
+						{
+							xtype: 'text',
+							text: 'Controller: ',
+						},
+						{
+							id: 'controllerConnected',
+							xtype: 'button',
+							text: 'Unknown',
+							cls: 'x-btn-default-toolbar-small-over',
+							overCls: 'x-btn-default-toolbar-small-over',
+							pressedCls: 'x-btn-default-toolbar-small-over',
+							cursor: 'default',
+						},
+						'-',
+						{
+							xtype: 'text',
+							text: 'Transmit Queue: ',
+						},
+						{
+							id: 'controllerSendQueue',
+							xtype: 'button',
+							text: '?',
+							cls: 'x-btn-default-toolbar-small-over',
+							overCls: 'x-btn-default-toolbar-small-over',
+							pressedCls: 'x-btn-default-toolbar-small-over',
+							cursor: 'default',
+						},
+						'-',
+						{
+							id: 'controllerInclusionStatus',
+							xtype: 'button',
+							hidden: true,
+							disabled: false,
+							cls: 'x-btn-default-toolbar-small-over',
+							overCls: 'x-btn-default-toolbar-small-over',
+						},
 
+			       ]
+        });
+        Ext.define('ZWaveStatusModel', {
+		            extend: 'Ext.data.Model',
+		            idProperty: 'name',
+		            fields: [
+		                {name: 'name', type: 'string'},
+		                {name: 'label', type: 'string'},
+		                {name: 'optional', type: 'boolean'},
+		                {name: 'readonly', type: 'boolean'},
+		                {name: 'type', type: 'string'},
+		                {name: 'value', type: 'string'},
+		                {name: 'minimum', type: 'integer'},
+		                {name: 'maximum', type: 'integer'},
+		                {name: 'state', type: 'string'},
+		                {name: 'description', type: 'string'},
+		                {name: 'valuelist'},
+		                {name: 'actionlist'}
+		            ]
+        });
+        var statusStore = Ext.create('Ext.data.Store', {
+		    // explicitly create reader
+		    model: 'ZWaveStatusModel',
+		    storeId: 'statusStore',
+            autoLoad: true,
+		    proxy: {
+			                    type: 'ajax',
+			                    url: HABminBaseURL + '/zwave/status/',
+			                    reader: {
+									type: 'json',
+			                        root: 'records'
+			                    },
+			                    headers: {'Accept': 'application/json'},
+           },
+
+		});
         var toolbar = Ext.create('Ext.toolbar.Toolbar', {
             items: [
                 {
@@ -110,17 +203,7 @@ Ext.define('openHAB.config.zwaveDeviceList', {
                     disabled: false,
                     tooltip: language.zwave_DevicesIncludeButtonTip,
                     handler: function () {
-                        Ext.Ajax.request({
-                            url: HABminBaseURL + '/zwave/action/binding/network/',
-                            method: 'PUT',
-                            jsonData: 'Include',
-                            headers: {'Accept': 'application/json'},
-                            success: function (response, opts) {
-                            },
-                            failure: function () {
-                                handleStatusNotification(NOTIFICATION_ERROR, language.zwave_DevicesActionError);
-                            }
-                        });
+                        Ext.create('openHAB.config.zwaveInclude').show();
                     }
                 },
                 {
@@ -131,20 +214,12 @@ Ext.define('openHAB.config.zwaveDeviceList', {
                     disabled: false,
                     tooltip: language.zwave_DevicesExcludeButtonTip,
                     handler: function () {
-                        Ext.Ajax.request({
-                            url: HABminBaseURL + '/zwave/action/binding/network/',
-                            method: 'PUT',
-                            jsonData: 'Exclude',
-                            headers: {'Accept': 'application/json'},
-                            success: function (response, opts) {
-                            },
-                            failure: function () {
-                                handleStatusNotification(NOTIFICATION_ERROR, language.zwave_DevicesActionError);
-                            }
-                        });
+                        Ext.create('openHAB.config.zwaveExclude').show();
                     }
                 },
-                '-'
+                '-',
+
+
             ]
         });
 
@@ -220,6 +295,7 @@ Ext.define('openHAB.config.zwaveDeviceList', {
             header: false,
             split: true,
             tbar: toolbar,
+            bbar: statusbar,
             collapsible: false,
             multiSelect: false,
             singleExpand: true,
@@ -490,16 +566,105 @@ Ext.define('openHAB.config.zwaveDeviceList', {
         },
         interval: 5000
     },
+	updateStatusBarData: {
+        run: function () {
+			var store = Ext.StoreManager.lookup('statusStore');
+						if (store == null)
+							return;
+			store.reload();
+        },
+        interval: 1000
+    },
+	updateStatusBar: {
+        run: function () {
+            // Periodically update the status bar
+			var store = Ext.StoreManager.lookup('statusStore');
+			if (store == null)
+				return;
+
+			var controllerStatus = store.getById('ControllerReady').get('value') == "true" ? true : false;
+			var controllerConnected = store.getById('ControllerConnected').get('value') == "true" ? true : false;
+			var controllerHealing = store.getById('NetworkHealRunning').get('value') == "true" ? true : false;
+			var controllerSendQueue = store.getById('ControllerSendQueue').get('value');
+			includeRunning = store.getById('InclusionStatus').get('value') == "true" ? true : false;
+			excludeRunning = store.getById('ExclusionStatus').get('value') == "true" ? true : false;
+
+			var statusBar_ControllerReady = Ext.getCmp('controllerReady');
+			var statusBar_ControllerConnected = Ext.getCmp('controllerConnected');
+			var statusBar_ControllerHealStatus = Ext.getCmp('controllerHealStatus');
+			var statusBar_ControllerSendQueue = Ext.getCmp('controllerSendQueue');
+			var statusBar_ControllerInclusionStatus = Ext.getCmp('controllerInclusionStatus');
+
+
+			if (controllerStatus && !controllerHealing) {
+				statusBar_ControllerReady.setText('Ready');
+				statusBar_ControllerReady.setIconCls('zwave-status-ready');
+
+			} else if (controllerHealing) {
+				statusBar_ControllerReady.setText('Healing...');
+				statusBar_ControllerReady.setIconCls('zwave-status-healing');
+			} else {
+				statusBar_ControllerReady.setText('Initializing...');
+				statusBar_ControllerReady.setIconCls('zwave-status-init');
+			}
+			if (controllerConnected) {
+				statusBar_ControllerConnected.setText('Connected');
+				statusBar_ControllerConnected.setIconCls('zwave-status-ready');
+			} else {
+				statusBar_ControllerConnected.setText('Not Connected');
+				statusBar_ControllerConnected.setIconCls('zwave-status-notready');
+			}
+
+			if (includeRunning) {
+				statusBar_ControllerInclusionStatus.setText('Including...');
+				statusBar_ControllerInclusionStatus.setIconCls('zwave-status-include');
+				var btnHandlerFunction=function() {
+				    Ext.create('openHAB.config.zwaveInclude').show()
+    			};
+				statusBar_ControllerInclusionStatus.setHandler(btnHandlerFunction);
+				statusBar_ControllerInclusionStatus.show();
+			} else if (excludeRunning) {
+				statusBar_ControllerInclusionStatus.setText('Excluding...');
+				statusBar_ControllerInclusionStatus.setIconCls('zwave-status-exclude');
+				var btnHandlerFunction=function() {
+					Ext.create('openHAB.config.zwaveExclude').show()
+    			};
+				statusBar_ControllerInclusionStatus.setHandler(btnHandlerFunction);
+				statusBar_ControllerInclusionStatus.show();
+			}
+			else
+			{
+				statusBar_ControllerInclusionStatus.setHandler('');
+				statusBar_ControllerInclusionStatus.hide();
+			}
+
+			// Send Queue...
+			statusBar_ControllerSendQueue.setText(controllerSendQueue);
+			if (controllerSendQueue < 10)
+				statusBar_ControllerSendQueue.removeCls('zwave-status-red');
+			else
+				statusBar_ControllerSendQueue.addCls('zwave-status-red');
+        },
+        interval: 500
+    },
     listeners: {
         beforeshow: function (grid, eOpts) {
             this.updateView.scope = this;
             Ext.TaskManager.start(this.updateView);
+            this.updateStatusBarData.scope = this;
+            Ext.TaskManager.start(this.updateStatusBarData);
+            this.updateStatusBar.scope = this;
+            Ext.TaskManager.start(this.updateStatusBar);
         },
         beforehide: function (grid, eOpts) {
             Ext.TaskManager.stop(this.updateView);
+            Ext.TaskManager.stop(this.updateStatusBarData);
+            Ext.TaskManager.stop(this.updateStatusBar);
         },
         beforedestroy: function (grid, eOpts) {
             Ext.TaskManager.stop(this.updateView);
+            Ext.TaskManager.stop(this.updateStatusBar);
+            Ext.TaskManager.stop(this.updateStatusBarData);
         }
     }
 })

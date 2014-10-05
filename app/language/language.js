@@ -305,7 +305,16 @@ var language = {
     // config/zwaveInclude.js
     zwave_IncludeTitle: "ZWave Device Inclusion",
     zwave_IncludeDeviceType: "Device Type",
-    zwave_IncludeHighPower: "User High Power",
+    zwave_IncludeHighPower: "Use High Power",
+    zwave_IncludeBegin: "Begin Include",
+    zwave_IncludeClose: "Close",
+
+    // config/zwaveExclude.js
+    zwave_ExcludeTitle: "ZWave Device Exclusion",
+    zwave_ExcludeDeviceType: "Device Type",
+    zwave_ExcludeHighPower: "Use High Power",
+    zwave_ExcludeBegin: "Begin Exclude",
+    zwave_ExcludeClose: "Close",
 
     // config/bindingList.js
     config_BindingListTitle: "Bindings",

@@ -56,11 +56,11 @@ Ext.define('ZWaveMessagesModel', {
         var messagesStore = Ext.create('Ext.data.Store', {
 		    // explicitly create reader
 		    model: 'ZWaveMessagesModel',
-		    storeId: 'includeMessagesStore',
+		    storeId: 'excludeMessagesStore',
             autoLoad: true,
 		    proxy: {
 			                    type: 'ajax',
-			                    url: HABminBaseURL + '/zwave/status/InclusionMessages/',
+			                    url: HABminBaseURL + '/zwave/status/ExclusionMessages/',
 			                    reader: {
 									type: 'json',
 			                        root: 'records'
@@ -68,9 +68,9 @@ Ext.define('ZWaveMessagesModel', {
 			                    headers: {'Accept': 'application/json'},
            },
 		});
-		var includeRunning = false;
+		var excludeRunning = false;
 
-Ext.define('openHAB.config.zwaveInclude', {
+Ext.define('openHAB.config.zwaveExclude', {
     extend: 'Ext.window.Window',
     closeAction: 'destroy',
     width: 750,
@@ -79,10 +79,10 @@ Ext.define('openHAB.config.zwaveInclude', {
     draggable: true,
     modal: true,
     flex: 1,
-    itemId: 'zwaveInclude',
+    itemId: 'zwaveExclude',
     layout: 'fit',
     initComponent: function () {
-        this.title = language.zwave_IncludeTitle;
+        this.title = language.zwave_ExcludeTitle;
 
         var me = this;
 
@@ -95,7 +95,7 @@ Ext.define('openHAB.config.zwaveInclude', {
             ]
         });
 
-        me.includeForm = Ext.create('Ext.form.Panel', {
+        me.excludeForm = Ext.create('Ext.form.Panel', {
             xtype: 'form',
             cls: 'save-chart-form',
             border: true,
@@ -109,7 +109,7 @@ Ext.define('openHAB.config.zwaveInclude', {
             items: [
 				{
 					xtype: 'button',
-					id:'includeStatusPanel',
+					id:'excludeStatusPanel',
 					height: 60,
 					width: 60,
 					text: ' ',
@@ -135,7 +135,7 @@ Ext.define('openHAB.config.zwaveInclude', {
 					allowDecimals: false,
 					value: 30,
 					increment: 10,
-					fieldLabel: 'Include Duration',
+					fieldLabel: 'Exclude Duration',
 					tipText: function(thumb){
 						                return String(thumb.value) + ' seconds';
            			},
@@ -162,21 +162,21 @@ Ext.define('openHAB.config.zwaveInclude', {
             ]
         });
 
-        this.items = [me.includeForm];//, chanList];
+        this.items = [me.excludeForm];//, chanList];
         this.callParent();
     },
     updateMessagesData: {
 	        run: function () {
-				var store = Ext.StoreManager.lookup('includeMessagesStore');
+				var store = Ext.StoreManager.lookup('excludeMessagesStore');
 							if (store == null)
 								return;
-				if (includeRunning) {
+				if (excludeRunning) {
 					store.reload();
 				}
 	        },
 	        interval: 1000,
 	        manualreload: function() {
-				var store = Ext.StoreManager.lookup('includeMessagesStore');
+				var store = Ext.StoreManager.lookup('excludeMessagesStore');
 				if (store == null)
 					return;
 				store.reload();
@@ -184,26 +184,26 @@ Ext.define('openHAB.config.zwaveInclude', {
     },
     updateStatusBar: {
         run: function () {
-			var store = Ext.StoreManager.lookup('includeMessagesStore');
+			var store = Ext.StoreManager.lookup('excludeMessagesStore');
 						if (store == null)
 							return;
 			var storeStatus = Ext.StoreManager.lookup('statusStore');
 
-			var includeButton = Ext.getCmp('btnBeginInclude');
+			var excludeButton = Ext.getCmp('btnBeginExclude');
 
 			if (storeStatus != null) {
 				var controllerIncluding = storeStatus.getById('InclusionStatus').get('value') == "true" ? true : false;
 				var controllerExcluding = storeStatus.getById('ExclusionStatus').get('value') == "true" ? true : false;
-				includeRunning = controllerExcluding || controllerIncluding;
-				if (includeRunning)
-					includeButton.setDisabled(true);
+				excludeRunning = controllerExcluding || controllerIncluding;
+				if (excludeRunning)
+					excludeButton.setDisabled(true);
 				else
-					includeButton.setDisabled(false);
+					excludeButton.setDisabled(false);
 
-				if (controllerIncluding)
-					Ext.getCmp('includeStatusPanel').setIconCls('zwave-inclusion-running');
+				if (controllerExcluding)
+					Ext.getCmp('excludeStatusPanel').setIconCls('zwave-inclusion-running');
 				else
-					Ext.getCmp('includeStatusPanel').setIconCls('zwave-inclusion-stopped');
+					Ext.getCmp('excludeStatusPanel').setIconCls('zwave-inclusion-stopped');
 			}
 
 
@@ -231,29 +231,30 @@ Ext.define('openHAB.config.zwaveInclude', {
 
     buttons: [
         {
-            text: language.zwave_IncludeClose,
+            text: language.zwave_ExcludeClose,
             handler: function () {
                 this.up('window').destroy();
             }
         },
         {
-			id: 'btnBeginInclude',
-            text: language.zwave_IncludeBegin,
+			id: 'btnBeginExclude',
+            text: language.zwave_ExcludeBegin,
             disabled: true,
             handler: function () {
-    		  var me = this.up('#zwaveInclude');
-                if (me.includeForm.isValid() == false) {
+    		  var me = this.up('#zwaveExclude');
+                if (me.excludeForm.isValid() == false) {
                     return;
                 }
 				var timerDuration = Ext.getCmp('includeTimerDuration').getValue() * 1000;
 				var highpowerMode = Ext.getCmp('includePowerMode').getValue();
+
                 Ext.Ajax.request({
                     url: HABminBaseURL + '/zwave/action/binding/network/' +  timerDuration + '/' + highpowerMode + '/',
                     method: 'PUT',
-                    jsonData: 'Include',
+                    jsonData: 'Exclude',
                     headers: {'Accept': 'application/json'},
                     success: function (response, opts) {
-						Ext.getCmp('btnBeginInclude').setDisabled(true);
+						Ext.getCmp('btnBeginExclude').setDisabled(true);
 
                     },
                     failure: function () {

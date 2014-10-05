@@ -333,3 +333,68 @@ body .ux-notification-info {
     background-position: right 5px top;
 }
 
+.zwave-status-idle {
+	background-color: #7A7676;
+	color: #ffffff;
+}
+.zwave-status-include {
+	background-image: url('../images/loading-square.gif') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-status-exclude {
+	background-image: url('../images/loading-square.gif') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-status-healing {
+	background-image: url('../images/loading-small.gif') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-status-init {
+	background-image: url('../images/loading-small.gif') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-status-ready {
+	background-image: url('../images/tick.png') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-status-notready {
+	background-image: url('../images/cross.png') !important;
+	background-size: 20px 20px;
+
+}
+.zwave-inclusion-btn {
+	width: 63px !important;
+	height: 63px !important;
+	background-color: #ffffff; !important;
+	background-image: none !important;
+	border-style: none !important;
+	position: absolute;
+	float: right;
+	right: 20px;
+	top: 0px;
+	cursor: default;
+}
+.zwave-inclusion-stopped {
+	background-image: url('../images/tick-large.png') !important;
+	background-size: 50px 50px;
+	width: 63px !important;
+	height: 63px !important;
+}
+.zwave-inclusion-running {
+	background-image: url('../images/loading-large.gif') !important;
+	background-size: 50px 50px;
+	width: 63px !important;
+	height: 63px !important;
+}
+.zwave-status-red {
+	background-color: #CC0000;
+}
+
+.x-btn-default-toolbar-small-icon-text-left .x-btn-icon-el {
+	width: 20px;
+}
