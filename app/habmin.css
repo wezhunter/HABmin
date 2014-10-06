@@ -339,32 +339,32 @@ body .ux-notification-info {
 }
 .zwave-status-include {
 	background-image: url('../images/loading-square.gif') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-status-exclude {
 	background-image: url('../images/loading-square.gif') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-status-healing {
 	background-image: url('../images/loading-small.gif') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-status-init {
 	background-image: url('../images/loading-small.gif') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-status-ready {
 	background-image: url('../images/tick.png') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-status-notready {
 	background-image: url('../images/cross.png') !important;
-	background-size: 20px 20px;
+	background-size: 16px 16px !important;
 
 }
 .zwave-inclusion-btn {
