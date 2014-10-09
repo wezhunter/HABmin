@@ -40,17 +40,12 @@ Ext.define('ZWaveMessagesModel', {
 		            idProperty: 'name',
 		            fields: [
 		                {name: 'name', type: 'string'},
-		                {name: 'label', type: 'string'},
-		                {name: 'optional', type: 'boolean'},
-		                {name: 'readonly', type: 'boolean'},
-		                {name: 'type', type: 'string'},
-		                {name: 'value', type: 'string'},
-		                {name: 'minimum', type: 'integer'},
-		                {name: 'maximum', type: 'integer'},
+		                {name: 'date', type: 'date', dateFormat: 'c'},
+		                {name: 'message', type: 'string'},
+		                {name: 'messagetype', type: 'string'},
+		                {name: 'messagevalue', type: 'integer'},
+		                {name: 'nodeid', type: 'integer'},
 		                {name: 'state', type: 'string'},
-		                {name: 'description', type: 'string'},
-		                {name: 'valuelist'},
-		                {name: 'actionlist'}
 		            ]
         });
         var messagesStore = Ext.create('Ext.data.Store', {
@@ -152,9 +147,9 @@ Ext.define('openHAB.config.zwaveInclude', {
 						    loadMask: false
 						},
 				        columns: [
-						        {header: 'Date',  dataIndex: 'description', width: 200},
-						        {header: 'Message', dataIndex: 'value', flex:1, sortable: false},
-						        {header: 'Node', dataIndex: 'minimum', sortable: false},
+						        {header: 'Date',  dataIndex: 'date', width: 200},
+						        {header: 'Message', dataIndex: 'messagetype', flex:1, sortable: false},
+						        {header: 'Node', dataIndex: 'nodeid', sortable: false},
 						        {header: 'State', dataIndex: 'state', sortable: false},
     					],
         				emptyText: 'No Messages'
